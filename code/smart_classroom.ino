@@ -1,51 +1,51 @@
 #include <LiquidCrystal.h>
 
-// ---------------- PIN CONNECTIONS ----------------
-
-// LCD: RS, E, D4, D5, D6, D7
+// ---------------- LCD CONNECTIONS ----------------
+// RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
 
-// IR sensors
+// ---------------- SENSOR CONNECTIONS ----------------
 #define IN_SENSOR  A0
 #define OUT_SENSOR A5
 
-// Relay
+// ---------------- RELAY CONNECTION ----------------
 #define RELAY 2
 
 // ---------------- VARIABLES ----------------
-
 int count = 0;
 
 int lastInState = LOW;
 int lastOutState = LOW;
 
-// ---------------- DISPLAY ----------------
+
+// ==================================================
+// DISPLAY FUNCTION
+// ==================================================
 
 void updateDisplay()
 {
   lcd.clear();
 
-  if (count <= 0)
-  {
-    lcd.setCursor(0, 0);
-    lcd.print("Nobody In Room");
+  lcd.setCursor(0, 0);
+  lcd.print("Count: ");
+  lcd.print(count);
 
-    lcd.setCursor(0, 1);
-    lcd.print("Light Is Off");
+  lcd.setCursor(0, 1);
+
+  if (count > 0)
+  {
+    lcd.print("Relay: ON");
   }
   else
   {
-    lcd.setCursor(0, 0);
-    lcd.print("Person In Room:");
-
-    lcd.setCursor(0, 1);
-    lcd.print(count);
-
-    lcd.print("  Light ON");
+    lcd.print("Relay: OFF");
   }
 }
 
-// ---------------- SETUP ----------------
+
+// ==================================================
+// SETUP
+// ==================================================
 
 void setup()
 {
@@ -56,38 +56,53 @@ void setup()
 
   pinMode(RELAY, OUTPUT);
 
-  // Start with light OFF
+  // Start with relay OFF
   digitalWrite(RELAY, LOW);
 
+  // Startup message
   lcd.setCursor(0, 0);
-  lcd.print("Visitor Counter");
+  lcd.print("Smart Classroom");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Occupancy System");
 
   delay(2000);
 
   updateDisplay();
 }
 
-// ---------------- MAIN LOOP ----------------
+
+// ==================================================
+// MAIN LOOP
+// ==================================================
 
 void loop()
 {
   int inState = digitalRead(IN_SENSOR);
   int outState = digitalRead(OUT_SENSOR);
 
-  // -------- PERSON ENTERING --------
+
+  // ----------------------------------------------
+  // PERSON ENTERING
+  // ----------------------------------------------
+
   if (inState == HIGH && lastInState == LOW)
   {
     count++;
 
     updateDisplay();
 
-    delay(200);
+    delay(300);
   }
 
-  // -------- PERSON LEAVING --------
+
+  // ----------------------------------------------
+  // PERSON LEAVING
+  // ----------------------------------------------
+
   if (outState == HIGH && lastOutState == LOW)
   {
-    // Prevent negative occupancy
+    // Prevent negative count
     if (count > 0)
     {
       count--;
@@ -95,14 +110,18 @@ void loop()
       updateDisplay();
     }
 
-    delay(200);
+    delay(300);
   }
 
-  // Save current sensor states
+
+  // Store previous sensor states
   lastInState = inState;
   lastOutState = outState;
 
-  // -------- AUTOMATIC LIGHT CONTROL --------
+
+  // ----------------------------------------------
+  // AUTOMATIC LIGHT CONTROL
+  // ----------------------------------------------
 
   if (count > 0)
   {
@@ -112,6 +131,7 @@ void loop()
   {
     digitalWrite(RELAY, LOW);
   }
+
 
   delay(50);
 }
